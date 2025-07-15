@@ -1,0 +1,75 @@
+📄 appFlow.txt — Chat App Feature Development Flow (Step-by-Step)
+
+✅ PHASE 1: Authentication & Integration
+1. Setup your separate Auth Service (done).
+2. Ensure each request to chat service carries a valid JWT or session.
+3. Middleware in chat service should verify the token and extract userId.
+4. Allow multi-app support (if you're using appToken in Auth Service).
+
+✅ PHASE 2: Core Setup & User Context
+5. Create ChatUser record when a new user joins (if not already present).
+6. Track user online/offline status (store in DB or Redis).
+7. Setup user profile customization like nickname or mutedChats.
+
+✅ PHASE 3: Chat Creation
+8. Implement "Start Private Chat":
+   - Check if a 1-on-1 chat already exists between two users.
+   - If not, create a new Chat with `isGroup: false`.
+
+9. Implement "Create Group Chat":
+   - Require group name and at least 3 users (including creator).
+   - Set `isGroup: true`, add participants and admins.
+
+✅ PHASE 4: Messaging
+10. Add "Send Message" feature:
+    - Create a new Message document with content, senderId, and chatId.
+    - Update Chat’s `lastMessageId`.
+
+11. Real-time: Emit new message via Socket.IO to other participants.
+
+12. Handle "Read Receipt":
+    - On message seen, push userId to message’s `seenBy`.
+
+13. Implement "Delete for Me":
+    - On delete, push userId to `deletedFor` array.
+
+✅ PHASE 5: Chat Listing & Preview
+14. Implement "Get My Chats":
+    - Query all Chat documents where userId is in `participants[]`.
+    - Populate lastMessageId and show preview.
+
+15. Support "Mute Chat":
+    - Add/remove Chat ID to/from `mutedChats` in ChatUser.
+
+✅ PHASE 6: Group Chat Management
+16. Add "Add/Remove Participant" (group only).
+17. Add "Promote/Demote Admin".
+18. Add "Leave Group Chat" logic.
+
+✅ PHASE 7: Typing & Online Indicators (via Redis/Socket.IO)
+19. Emit "typing" status to other users in the chat room.
+20. Maintain online user status using Redis (with expiry or heartbeat).
+21. Show `lastSeen` from ChatUser for offline users.
+
+✅ PHASE 8: File & Media Support
+22. Support file uploads (images, audio, etc) using cloud storage (e.g., Cloudinary/S3).
+23. Store media URL in message `content` field with `type = 'image'`, etc.
+
+✅ PHASE 9: Pagination & Performance
+24. Add pagination to:
+    - Chat listing (infinite scroll)
+    - Message history (`?before=msgId&limit=20`)
+25. Index important fields like `chatId`, `createdAt`, etc.
+
+✅ PHASE 10: Extras
+26. Add push notifications for new messages (if mobile/web push is needed).
+27. Add rate limiting (e.g., max X messages/sec/user).
+28. Add message pinning, replying, forwarding, etc (optional).
+
+✅ PRODUCTION READY CHECKLIST
+- ✅ Auth integrated and secure
+- ✅ All DB relations work
+- ✅ Real-time Socket.IO tested
+- ✅ Efficient queries and pagination
+- ✅ Uploads/media stable
+- ✅ Microservices separated cleanly (Auth, Chat)

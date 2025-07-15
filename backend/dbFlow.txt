@@ -1,0 +1,73 @@
+📄 dbFlow.txt — Chat App Database Design Summary
+
+✅ 1. Auth-Service Owns the Users
+- All user authentication and primary user data (username, email, password) is handled by a separate Auth Service.
+- Each user is identified by a unique userId (e.g., string or UUID).
+- Other services never store passwords. They reference users only by userId.
+
+📁 2. Chat Collection — Stores Chat Rooms
+
+Chat {
+  isGroup: Boolean,
+  name: String,            // for group chats only
+  participants: [userId],  // always >= 2
+  admins: [userId],        // optional, for group
+  lastMessageId: ObjectId  // optional, for preview
+}
+
+- Private Chat: isGroup = false, 2 participants
+- Group Chat: isGroup = true, more than 2 participants, has name and optionally admins
+- One Chat collection handles both using the isGroup flag.
+
+💬 3. Message Collection — Stores Individual Messages
+
+Message {
+  chatId: ObjectId,      // reference to Chat
+  senderId: userId,
+  type: "text" | "image" | "file" | "audio",
+  content: String,
+  seenBy: [userId],      // users who read the message
+  deletedFor: [userId],  // per-user soft delete
+}
+
+- All messages are stored here, regardless of sender or chat type.
+- chatId links the message to a specific chat room.
+- seenBy tracks read receipts.
+- deletedFor supports delete-for-me functionality.
+
+👤 4. ChatUser Collection — Stores Chat-Specific User Info
+
+ChatUser {
+  userId: userId,
+  nickname: String,        // only used in chat app
+  status: "online" | "offline",
+  lastSeen: Date,
+  mutedChats: [chatId]
+}
+
+- Not handled by the auth service.
+- Stores extra info like:
+  - User's nickname for chats
+  - Online/offline status
+  - Last seen time
+  - Which chats are muted
+
+🔗 5. How Everything Connects
+
+User (Auth Service)
+   |
+   |  ↘
+   |   → ChatUser → status, nickname
+   |
+   → Chat (participants: [userId])
+        |
+        → Message (chatId, senderId)
+
+- Chat links together userIds from the auth-service.
+- Messages are stored with reference to Chat and senderId.
+- User profile info is fetched from Auth Service via API.
+
+⚡ Bonus Notes:
+- All user references are via userId (no duplicate user data in DB).
+- Real-time things (e.g., typing, online status) can be stored in Redis.
+- Scalable and clean schema, ready for microservices and real-time use.
