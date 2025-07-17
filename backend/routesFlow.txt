@@ -1,0 +1,103 @@
+📄 routesFlow.txt — API & Socket Route Structure for Chat App
+
+✅ ALL ROUTES use `authMiddleware` to extract and verify user from JWT.
+User info comes from Auth Service and is not duplicated.
+
+=======================================
+🌐 REST API ROUTES (Express/Mongoose)
+=======================================
+
+📁 /api/messages  → messageController.js
+
+POST    /send
+  → Send a new message to a chat
+
+GET     /:chatId
+  → Get messages of a specific chat (with pagination support)
+
+POST    /:msgId/seen
+  → Mark a message as seen by the current user
+
+POST    /:msgId/delete
+  → Soft delete a message for current user only
+
+
+📁 /api/chats  → chatController.js
+
+POST    /private
+  → Start or get a private chat between two users
+
+POST    /group
+  → Create a new group chat with participants
+
+GET     /
+  → Get all chats of current user (for sidebar)
+
+GET     /:chatId
+  → Get details of a specific chat (participants, name, etc.)
+
+DELETE  /:chatId
+  → Leave or delete a chat (depends on chat type & role)
+
+
+📁 /api/chats/:chatId → groupChatController.js
+
+POST    /add
+  → Add one or more users to a group chat
+
+POST    /remove
+  → Remove user(s) from group chat
+
+POST    /promote
+  → Promote a user to group admin
+
+POST    /demote
+  → Demote a user from group admin
+
+
+📁 /api/user → chatUserController.js
+
+GET     /me
+  → Get ChatUser profile (nickname, muted chats, etc.)
+
+POST    /nickname
+  → Set or update nickname used inside chat app
+
+POST    /mute/:chatId
+  → Mute or unmute a chat (toggle behavior)
+
+
+=======================================
+⚡ SOCKET.IO EVENTS (Real-time layer)
+=======================================
+
+🔌 message:send
+  → User sends message in a chat (emitted from client)
+
+📤 message:received
+  → Server emits to other users when a message is sent
+
+📬 message:seen
+  → User marks message as read
+
+✍️ user:typing
+  → Emit typing started/stopped in a chat
+
+🟢 user:status
+  → Toggle online/offline or update lastSeen
+
+(Handled in socketController.js)
+
+=======================================
+🗃 DB Collections
+=======================================
+- User (Auth Service)
+- Chat
+- Message
+- ChatUser
+
+References:
+- Chat.participants → [userId]
+- Message.senderId → userId
+- ChatUser.userId → userId
+- All userId values point to Auth Service users.
