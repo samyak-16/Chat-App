@@ -5,6 +5,14 @@ import cookieParser from 'cookie-parser';
 import { db } from './src/utils/db.js';
 import { ApiResponse } from './src/utils/api-response.js';
 
+//Importing Routes
+
+import messagesRouter from './src/routes/messages.route.js';
+import chatUserPreferencesRouter from './src/routes/chatUserPreferences.route.js';
+import chatsRouter from './src/routes/chats.route.js';
+import { verifyToken } from './src/middlewares/verifyToken.middleware.js';
+import { ensureChatUserExists } from './src/middlewares/ensureChatUserExists.middleware.js';
+
 //Connecting to Database
 db();
 dotenv.config();
@@ -21,11 +29,18 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
-// app.use("/api/auth", authRoutes);   // /api/auth/register, login, etc.
-// app.use("/api/user", userRoutes);
-// app.use("/api/app", appRoutes);   // /api/app/register
 
-// Home Routing
+// Middlewares starts here :
+
+app.use(verifyToken);
+app.use(ensureChatUserExists);
+//Routing Starts here
+app.use('/api/chats', chatsRouter);
+
+app.use('/api/messages', messagesRouter);
+app.use('/api/user', chatUserPreferencesRouter);
+
+//Routing Ends here
 
 app.get('/', (req, res) => {
   res.status(200).json(new ApiResponse(200, null, 'Chat App API is Live'));

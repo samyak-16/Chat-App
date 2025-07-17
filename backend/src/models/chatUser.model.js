@@ -22,9 +22,10 @@ const chatUserSchema = new mongoose.Schema(
     mutedChats: {
       type: [mongoose.Schema.Types.ObjectId], // Chat IDs
       default: [],
+      
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model('ChatUser', chatUserSchema);
+export const ChatUser = mongoose.model('ChatUser', chatUserSchema);
