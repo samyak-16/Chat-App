@@ -1,2 +1,4 @@
 Full Exp : https://chatgpt.com/share/6865439d-0260-800b-86ab-e4010ef11c05
 -- https://www.masterji.co/project/be50e655-d311-4811-9a18-e1ce0d19299c
+
+Problem when we try to create chat with same two participants (OwnSelf) -- > https://chatgpt.com/share/687ab06b-7b64-800b-b6c3-b6cb35926a0a
