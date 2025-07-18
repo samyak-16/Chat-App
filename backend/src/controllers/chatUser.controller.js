@@ -1,4 +1,5 @@
 import { ChatUser } from '../models/chatUser.model.js';
+import { Chat } from '../models/chat.model.js';
 import { ApiError } from '../utils/api-error.js';
 import { ApiResponse } from '../utils/api-response.js';
 import mongoose from 'mongoose';
@@ -81,10 +82,21 @@ const muteChat = async (req, res) => {
     if (!user) {
       return res.status(404).json(new ApiError(404, 'User not found'));
     }
+
     if (!mongoose.Types.ObjectId.isValid(chatId)) {
       return res.status(400).json(new ApiError(400, 'Invalid chatId'));
     }
-    const chatIdObj = mongoose.Types.ObjectId(chatId);
+
+    // ✅ Check if chat exists
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res
+        .status(404)
+        .json(new ApiError(404, 'Chat not found with the chatID'));
+    }
+
+    const chatIdObj = new mongoose.Types.ObjectId(chatId);
+
     const isMuted = user.mutedChats.some((id) => id.equals(chatIdObj));
 
     if (isMuted) {
