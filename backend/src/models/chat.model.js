@@ -18,7 +18,7 @@ const chatSchema = new mongoose.Schema(
     participants: {
       type: [String], // userIds from auth service
       required: true,
-      validate: [(arr) => arr.length >= 2, 'At least 2 participants required'],
+      
     },
     admins: {
       type: [String], // Optional: only for group chats
