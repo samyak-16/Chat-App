@@ -20,7 +20,8 @@ import {
   startOrGetPrivateChat,
   createGroupChat,
   getChatDetails,
-  leaveOrDeleteChat,
+  leaveGroupChat,
+  archiveChats,
   getAllChatsForUser,
   addUsersToGroup,
   removeUsersFromGroup,
@@ -34,10 +35,11 @@ const router = express.Router();
 router.post('/private', startOrGetPrivateChat);
 router.post('/group', createGroupChat);
 router.get('/:chatId', getChatDetails);
-router.delete('/:chatId', leaveOrDeleteChat);
+router.patch('/:chatId', archiveChats); // Both for group and private chats
 router.get('/', getAllChatsForUser);
 
 // Group Chat Actions
+router.delete('/:chatId/leave', leaveGroupChat);
 router.post('/:chatId/add', addUsersToGroup);
 router.post('/:chatId/remove', removeUsersFromGroup);
 router.post('/:chatId/promote', promoteUserToAdmin);
