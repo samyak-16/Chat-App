@@ -1,0 +1,8 @@
+Enhancements  In leaveGroupChat : 
+
+✅ Auto-promote a new admin if the last admin leaves.
+
+🔐 Emit socket event to inform other participants.
+
+
+-------------------------------------------------------------------
