@@ -1,5 +1,6 @@
 // Chat Controller Outline
 
+import mongoose, { Types } from 'mongoose';
 import { Chat } from '../models/chat.model.js';
 import { ChatUser } from '../models/chatUser.model.js';
 import { ApiError } from '../utils/api-error.js';
@@ -120,15 +121,112 @@ const createGroupChat = async (req, res) => {
 };
 
 // Get chat details
-const getChatDetails = async (req, res) => {};
+const getChatDetails = async (req, res) => {
+  const chatId = req.params?.chatId;
+  const userId = req.user?.userId;
 
-// Leave chat or delete it
-const leaveOrDeleteChat = async (req, res) => {};
+  if (!chatId) {
+    return res.status(400).json(new ApiError(400, 'chatId is required'));
+  }
+  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId is not a valid mongoose ObjectId'));
+  }
+
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'userId required in req object'));
+  }
+
+  try {
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(400).json(new ApiError(400, 'chatId is not valid'));
+    }
+
+    if (!chat.participants.includes(userId)) {
+      return res
+        .status(403)
+        .json(new ApiError(403, 'User is not part of the  requested chat'));
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, chat, 'Chat fetched successfully'));
+  } catch (error) {
+    console.error('Error while gettingChatDetails : ', error);
+    res
+      .status(500)
+      .json(new ApiError(500, 'internal Server Error at getChatDetails'));
+  }
+};
+
+// Archive  single or multiple Chats (both private and group)
+
+const archiveChats = async (req, res) => {};
 
 // Get all chats for current user (preview)
+
 const getAllChatsForUser = async (req, res) => {};
 
 // -------------------- GROUP CHAT MANAGEMENT ACTIONS --------------------
+
+// Leave group chat
+const leaveGroupChat = async (req, res) => {
+  const chatId = req.params?.chatId;
+
+  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId is not a valid mongoose ObjectId'));
+  }
+
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'userId required in req object'));
+  }
+
+  try {
+    const chat = await Chat.findOne({ _id: chatId, isGroup: true });
+    if (!chat) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'Group chat not found with given ID'));
+    }
+
+    if (!chat.participants.includes(userId)) {
+      return res
+        .status(403)
+        .json(new ApiError(403, 'User is not part of this chat'));
+    }
+
+    // Remove user from participants and admins
+    chat.participants.pull(userId);
+    chat.admins.pull(userId); // If The user is not an admin → .pull() just does nothing.
+
+    // If no one is left in group, delete chat
+    if (chat.participants.length === 0) {
+      await Chat.deleteOne({ _id: chatId });
+      return res
+        .status(200)
+        .json(new ApiResponse(200, null, 'Group deleted as last user left'));
+    }
+
+    await chat.save();
+    return res
+      .status(200)
+      .json(new ApiResponse(200, chat, 'Left group successfully'));
+  } catch (error) {
+    console.error('Error while leaving/Deleting chat:', error);
+    res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error at leaveGroupChat'));
+  }
+};
 
 // Add users to group chat
 const addUsersToGroup = async (req, res) => {};
@@ -146,7 +244,8 @@ export {
   startOrGetPrivateChat,
   createGroupChat,
   getChatDetails,
-  leaveOrDeleteChat,
+  leaveGroupChat,
+  archiveChats,
   getAllChatsForUser,
   addUsersToGroup,
   removeUsersFromGroup,
