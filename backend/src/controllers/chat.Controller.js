@@ -1,11 +1,12 @@
 // Chat Controller Outline
 
-import mongoose, { Types } from 'mongoose';
+import mongoose from 'mongoose';
 import { Chat } from '../models/chat.model.js';
 import { ChatUser } from '../models/chatUser.model.js';
 import { ApiError } from '../utils/api-error.js';
 import { ApiResponse } from '../utils/api-response.js';
 import { filterValidUserIds } from '../utils/filterValidUserIds.js';
+import { filterValidChatIds } from '../utils/filterValidChatIds.js';
 
 // -------------------- SINGLE & GROUP CHAT BASE ACTIONS --------------------
 
@@ -164,8 +165,92 @@ const getChatDetails = async (req, res) => {
 };
 
 // Archive  single or multiple Chats (both private and group)
+const archiveOrUnarchiveChats = async (req, res) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'userId required in req object'));
+  }
 
-const archiveChats = async (req, res) => {};
+  const chatIds = req.body?.chatIds; // Should be an Array
+  if (!Array.isArray(chatIds) || chatIds.length === 0) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatIds should be a non-empty array'));
+  }
+
+  // Validate chatIds
+  let inValidChatIds = [];
+  for (const chatId of chatIds) {
+    if (!mongoose.Types.ObjectId.isValid(chatId)) {
+      inValidChatIds.push(chatId);
+    }
+  }
+
+  if (inValidChatIds.length > 0) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(400, 'Some chatIds are not valid objectId', inValidChatIds)
+      );
+  }
+
+  try {
+    const result = await filterValidChatIds(chatIds);
+    if (result.validChatIds.length === 0) {
+      return res.status(404).json(new ApiError(404, 'No valid chatIds found'));
+    }
+
+    const user = await ChatUser.findOne({ userId });
+    if (!user) {
+      return res.status(404).json(new ApiError(404, 'ChatUser not found'));
+    }
+
+    const allChatIds = [...new Set(result.validChatIds)];
+    const archiveChats = [];
+    const unArchiveChats = [];
+
+    allChatIds.forEach((chatId) => {
+      if (user.archivedChats.includes(chatId)) {
+        unArchiveChats.push(chatId);
+      } else {
+        archiveChats.push(chatId);
+      }
+    });
+
+    // Archive
+    archiveChats.forEach((chatId) => {
+      user.archivedChats.push(chatId);
+    });
+
+    // Unarchive
+    unArchiveChats.forEach((chatId) => {
+      user.archivedChats.pull(chatId);
+    });
+
+    await user.save();
+
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          archivedChats: archiveChats,
+          unArchivedChats: unArchiveChats,
+          user,
+        },
+        'Archived/unarchived successfully'
+      )
+    );
+  } catch (error) {
+    console.error('Error while archiving/unArchiving chats:', error);
+    res
+      .status(500)
+      .json(
+        new ApiError(500, 'Internal Server Error at archiveOrUnarchiveChats')
+      );
+  }
+};
 
 // Get all chats for current user (preview)
 
@@ -245,7 +330,7 @@ export {
   createGroupChat,
   getChatDetails,
   leaveGroupChat,
-  archiveChats,
+  archiveOrUnarchiveChats,
   getAllChatsForUser,
   addUsersToGroup,
   removeUsersFromGroup,

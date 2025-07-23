@@ -21,7 +21,7 @@ import {
   createGroupChat,
   getChatDetails,
   leaveGroupChat,
-  archiveChats,
+  archiveOrUnarchiveChats,
   getAllChatsForUser,
   addUsersToGroup,
   removeUsersFromGroup,
@@ -35,7 +35,7 @@ const router = express.Router();
 router.post('/private', startOrGetPrivateChat);
 router.post('/group', createGroupChat);
 router.get('/:chatId', getChatDetails);
-router.patch('/:chatId', archiveChats); // Both for group and private chats
+router.patch('/archive', archiveOrUnarchiveChats); // Both for group and private chats
 router.get('/', getAllChatsForUser);
 
 // Group Chat Actions
