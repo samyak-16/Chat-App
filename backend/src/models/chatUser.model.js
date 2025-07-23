@@ -7,6 +7,11 @@ const chatUserSchema = new mongoose.Schema(
       required: true,
       unique: true, // 1 record per user
     },
+    archivedChats: {
+      type: [mongoose.Schema.Types.ObjectId],
+      // ChatIds
+      default: [],
+    },
     nickname: {
       type: String,
       trim: true,
@@ -22,7 +27,6 @@ const chatUserSchema = new mongoose.Schema(
     mutedChats: {
       type: [mongoose.Schema.Types.ObjectId], // Chat IDs
       default: [],
-      
     },
   },
   { timestamps: true }
