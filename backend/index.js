@@ -34,6 +34,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(verifyToken);
 app.use(ensureChatUserExists);
+// Middlewares ends here :
+
 //Routing Starts here
 app.use('/api/chats', chatsRouter);
 

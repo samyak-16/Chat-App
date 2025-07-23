@@ -18,7 +18,6 @@ const chatSchema = new mongoose.Schema(
     participants: {
       type: [String], // userIds from auth service
       required: true,
-      
     },
     admins: {
       type: [String], // Optional: only for group chats
