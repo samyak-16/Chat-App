@@ -254,7 +254,38 @@ const archiveOrUnarchiveChats = async (req, res) => {
 
 // Get all chats for current user (preview)
 
-const getAllChatsForUser = async (req, res) => {};
+const getAllChatsForUser = async (req, res) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'userId is requires in req object'));
+  }
+  try {
+    const chats = await Chat.find({ participants: userId }).sort({
+      updatedAt: -1,
+    }); // -1 = descending (latest first)
+
+    if (chats.length === 0) {
+      return res
+        .status(404)
+        .json(
+          new ApiError(
+            404,
+            'No chats Found For the user Please start a new Chat'
+          )
+        );
+    }
+    return res
+      .status(200)
+      .json(new ApiResponse(200, chats, "Sorted lists of the user's chat "));
+  } catch (error) {
+    console.error('Error while fetching AllChats for the user :( ');
+    res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error at getAllChatsForUser'));
+  }
+};
 
 // -------------------- GROUP CHAT MANAGEMENT ACTIONS --------------------
 
@@ -313,8 +344,115 @@ const leaveGroupChat = async (req, res) => {
   }
 };
 
-// Add users to group chat
-const addUsersToGroup = async (req, res) => {};
+const addUsersToGroup = async (req, res) => {
+  const chatId = req.params?.chatId;
+  const rawParticipantsId = req.body?.participantsId;
+  const userId = req.user?.userId;
+
+  // Validate chatId
+  if (!chatId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId is required in params'));
+  }
+  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId is not a valid Mongo ObjectId'));
+  }
+
+  // Validate participantsId
+  if (!Array.isArray(rawParticipantsId) || rawParticipantsId.length < 1) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          'At least 1 user ID is required in participantsId list to add to the group'
+        )
+      );
+  }
+
+  // Remove duplicates
+  const participantsId = [...new Set(rawParticipantsId)];
+
+  // Prevent user from adding themself again
+  if (participantsId.includes(userId)) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          "Don't add your own userId — you're already part of the group"
+        )
+      );
+  }
+
+  try {
+    // Fetch the chat
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res.status(404).json(new ApiError(404, 'Chat not found'));
+    }
+
+    // Ensure it is a group chat
+    if (!chat.isGroup) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'This chat is not a group chat'));
+    }
+
+    // Check if user making the request is a participant
+    if (!chat.participants.includes(userId)) {
+      return res
+        .status(403)
+        .json(new ApiError(403, 'You are not a member of this group chat'));
+    }
+
+    // Filter only valid userIds
+    const { validUserIds, missingUserIds } = await filterValidUserIds(
+      participantsId
+    ); // Only add validUserIds and ignore missingUserIds
+    if (validUserIds.length === 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            'None of the provided user IDs are valid',
+            missingUserIds
+          )
+        );
+    }
+
+    // Add only users not already in participants
+    let duplicateIds = [];
+    validUserIds.forEach((id) => {
+      if (!chat.participants.includes(id)) {
+        chat.participants.push(id);
+      } else {
+        duplicateIds.push(id);
+      }
+    });
+
+    await chat.save();
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { chat, duplicateIds },
+          'Users added to the group successfully excluding the duplicates'
+        )
+      );
+  } catch (error) {
+    console.error('Error while adding users to the group:', error);
+    res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error at addUsersToGroup'));
+  }
+};
 
 // Remove users from group chat
 const removeUsersFromGroup = async (req, res) => {};

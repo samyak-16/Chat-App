@@ -3,6 +3,13 @@ Enhancements  In leaveGroupChat :
 ✅ Auto-promote a new admin if the last admin leaves.
 
 🔐 Emit socket event to inform other participants.
+-------------------------------------------------------------------
+Enhancements in getAllChatsForUser : 
 
+populate('lastMessageId') to show message preview
+
+Pagination: .limit(20).skip(20 * page)
+
+Filter: .find({ participants: userId, isGroup: true })
 
 -------------------------------------------------------------------
