@@ -15,6 +15,7 @@ const chatUserSchema = new mongoose.Schema(
     nickname: {
       type: String,
       trim: true,
+      required : true
     },
     status: {
       type: String,
