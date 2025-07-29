@@ -1,6 +1,6 @@
 // Chat Controller Outline
 
-import mongoose from 'mongoose';
+import mongoose, { Mongoose, Types } from 'mongoose';
 import { Chat } from '../models/chat.model.js';
 import { ChatUser } from '../models/chatUser.model.js';
 import { ApiError } from '../utils/api-error.js';
@@ -455,7 +455,100 @@ const addUsersToGroup = async (req, res) => {
 };
 
 // Remove users from group chat
-const removeUsersFromGroup = async (req, res) => {};
+const removeUsersFromGroup = async (req, res) => {
+  // Extract chatId from URL params
+  const chatId = req.params?.chatId;
+  if (!chatId) {
+    // chatId is required to identify which group to remove users from
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId is required in params'));
+  }
+
+  // Get the ID of the user making the request from the authenticated token
+  const userId = req.user?.userId;
+
+  // Extract the list of user IDs to remove from request body
+  const rawParticipantsId = req.body?.participantsId;
+
+  // Validate participantsId is a non-empty array
+  if (!Array.isArray(rawParticipantsId) || rawParticipantsId.length === 0) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'participantsId must be a non-empty array'));
+  }
+
+  // Validate chatId is a valid MongoDB ObjectId string
+  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId must be a valid ObjectId'));
+  }
+
+  // Remove duplicate IDs from participants list (Set removes duplicates)
+  const participantsId = [...new Set(rawParticipantsId)];
+
+  // Prevent user from including themselves in participantsId
+  if (participantsId.includes(userId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'You cannot include yourself in participantsId'));
+  }
+
+  try {
+    // Fetch the chat document by its ID
+    const chat = await Chat.findById(chatId);
+
+    // If chat not found, return 404
+    if (!chat) {
+      return res.status(404).json(new ApiError(404, 'Chat not found'));
+    }
+
+    // Ensure the chat is a group chat
+    if (!chat.isGroup) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'Provided chat is not a group chat'));
+    }
+
+    // Only admins can remove participants, check if current user is admin
+    if (!chat.admins.includes(userId)) {
+      return res
+        .status(403)
+        .json(new ApiError(403, 'Only admin can remove participants'));
+    }
+
+    // Validate provided participants IDs against actual users (returns valid IDs)
+    const { validUserIds } = await filterValidUserIds(participantsId);
+
+    // If no valid user IDs found, return error
+    if (validUserIds.length === 0) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'No valid participantsId found'));
+    }
+
+    // Remove each valid user ID from participants and admins array (if present)
+    validUserIds.forEach((id) => {
+      chat.participants.pull(id);
+      chat.admins.pull(id);
+    });
+
+    // Save changes to the chat document
+    await chat.save();
+
+    // Return success response with updated chat object
+    return res
+      .status(200)
+      .json(new ApiResponse(200, chat, 'Participants removed successfully'));
+  } catch (error) {
+    // Log error and return internal server error response
+    console.error('Error while removing user from the group:', error);
+    return res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error at removeUsersFromGroup'));
+  }
+};
 
 // Promote user to admin
 const promoteUserToAdmin = async (req, res) => {};
