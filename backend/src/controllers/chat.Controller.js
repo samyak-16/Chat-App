@@ -550,8 +550,142 @@ const removeUsersFromGroup = async (req, res) => {
   }
 };
 
-// Promote user to admin
-const promoteUserToAdmin = async (req, res) => {};
+// Promote user(s) to admin in a group chat
+const promoteUserToAdmin = async (req, res) => {
+  // Extract the ID of the current authenticated user from the request
+  const userId = req.user?.userId;
+
+  // Validate that userId exists in the request (user is authenticated)
+  if (!userId) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          "userId couldn't be found in the user inside req object"
+        )
+      );
+  }
+
+  // Extract the list of userIds to be promoted from request body
+  const beingPromotedToAdmins = req.body?.beingPromotedToAdmins;
+
+  // Check if beingPromotedToAdmins is a valid non-empty array
+  if (
+    !Array.isArray(beingPromotedToAdmins) ||
+    beingPromotedToAdmins.length === 0
+  ) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(400, 'beingPromotedToAdmins should be a non-empty Array')
+      );
+  }
+
+  // Prevent self-promotion for security reasons (user cannot promote themselves)
+  if (beingPromotedToAdmins.includes(userId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'You cannot include yourself in the list.'));
+  }
+
+  // Extract chatId from request parameters
+  const chatId = req.params?.chatId;
+
+  // Validate that chatId is a valid MongoDB ObjectId
+  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'chatId in params is not a valid ObjectId'));
+  }
+
+  // Remove duplicates from beingPromotedToAdmins list
+  const admins = [...new Set(beingPromotedToAdmins)];
+
+  try {
+    // Fetch the chat document by chatId from the database
+    const chat = await Chat.findById(chatId);
+
+    // If chat not found, return 404 error
+    if (!chat) {
+      return res.status(404).json(new ApiError(404, 'Chat not found'));
+    }
+
+    // Check if the chat is a group chat (only group chats have admins)
+    if (!chat.isGroup) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'Chat should be a groupChat'));
+    }
+
+    // Only the group creator can promote admins — check authorization
+    if (chat.createdBy !== userId) {
+      return res
+        .status(403)
+        .json(
+          new ApiError(
+            403,
+            'Forbidden: Only the group creator can promote admins'
+          )
+        );
+    }
+
+    // Filter out invalid userIds from admins list (e.g. users that don't exist)
+    const { validUserIds } = await filterValidUserIds(admins);
+
+    // If no valid userIds remain after filtering, respond with error
+    if (validUserIds.length == 0) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'No any userIds were valid'));
+    }
+
+    // Identify users who are not participants in the chat (cannot be promoted)
+    const notInParticipants = validUserIds.filter(
+      (id) => !chat.participants.includes(id)
+    );
+
+    // Return error if some users are not part of the group
+    if (notInParticipants.length > 0) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            'Some users are not part of the group and cannot be promoted',
+            notInParticipants
+          )
+        );
+    }
+
+    // Promote users by adding them to the admins list if not already admins
+    validUserIds.forEach((id) => {
+      if (!chat.admins.includes(id)) {
+        chat.admins.push(id);
+      }
+    });
+
+    // Save the updated chat document with new admins to the database
+    await chat.save();
+
+    // Respond with success and updated admins list
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          chat.admins,
+          'Selected users promoted to Admin successfully'
+        )
+      );
+  } catch (error) {
+    // Log unexpected errors and respond with generic server error message
+    console.error('Error while promoting User to admin:', error);
+    return res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error at promoteUserToAdmin'));
+  }
+};
 
 // Demote user from admin
 const demoteUserFromAdmin = async (req, res) => {};
