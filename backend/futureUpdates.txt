@@ -17,3 +17,8 @@ Filter: .find({ participants: userId, isGroup: true })
 Enhancements in removeUserFromGoup : 
 
   only the group owner should be able to remove another admin or you want a warning . 
+
+
+
+Enhancements in filterValidUserIds : 
+It should also check if chatIds are mooongoose objectIds or not  

@@ -687,8 +687,126 @@ const promoteUserToAdmin = async (req, res) => {
   }
 };
 
-// Demote user from admin
-const demoteUserFromAdmin = async (req, res) => {};
+// Demote users from admin role in a group chat
+const demoteUserFromAdmin = async (req, res) => {
+  const chatId = req.params?.chatId;
+  const userId = req.user?.userId;
+  const beingDemotedFromAdmins = req.body?.beingDemotedFromAdmins;
+
+  // 1. Validate chatId
+  if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'Valid chatId is required in params'));
+  }
+
+  // 2. Validate userId in request
+  if (!userId) {
+    return res
+      .status(400)
+      .json(new ApiError(400, 'userId required in req object'));
+  }
+
+  // 3. Validate input array
+  if (
+    !Array.isArray(beingDemotedFromAdmins) ||
+    beingDemotedFromAdmins.length === 0
+  ) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          'beingDemotedFromAdmins should be a non-empty array of userIds'
+        )
+      );
+  }
+
+  // 4. Remove duplicates
+  const removeFromAdminList = [...new Set(beingDemotedFromAdmins)];
+
+  // 5. Prevent self-demotion
+  if (removeFromAdminList.includes(userId)) {
+    return res
+      .status(405)
+      .json(
+        new ApiError(
+          405,
+          'Not allowed: You cannot demote yourself from admin role'
+        )
+      );
+  }
+
+  try {
+    // 6. Find the chat
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      return res
+        .status(404)
+        .json(new ApiError(404, 'Chat not found with provided chatId'));
+    }
+
+    // 6.5. only for groupChats : Only proceed if the chat is a group chat
+
+    if (chat.isGroup === false) {
+      return res
+        .status(400)
+        .json(
+          new ApiError(400, 'Invalid operation: Chat should be a group chat')
+        );
+    }
+
+    // 7. Only creator can demote admins
+    if (chat.createdBy !== userId) {
+      return res
+        .status(403)
+        .json(
+          new ApiError(
+            403,
+            'Forbidden: Only the group creator can demote admins'
+          )
+        );
+    }
+
+    // 8. Validate user IDs
+    const { validUserIds } = await filterValidUserIds(removeFromAdminList);
+    if (validUserIds.length === 0) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'No valid userIds in the list'));
+    }
+
+    // 9. Remove valid users from admins
+    const demotableIds = validUserIds.filter((id) => chat.admins.includes(id));
+
+    if (demotableIds.length === 0) {
+      return res
+        .status(400)
+        .json(new ApiError(400, 'None of the provided users are admins'));
+    }
+
+    demotableIds.forEach((id) => {
+      chat.admins.pull(id);
+    });
+    await chat.save();
+
+    // 10. Response
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          chat.admins,
+          'Users demoted from admin successfully (ignored userIds not in participants - No error will be thrown)'
+        )
+      );
+  } catch (error) {
+    console.error('Error while demoting user from admin:', error);
+    return res
+      .status(500)
+      .json(new ApiError(500, 'Internal Server Error in demoteUserFromAdmin'));
+  }
+};
 
 export {
   startOrGetPrivateChat,
