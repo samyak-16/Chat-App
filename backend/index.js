@@ -1,4 +1,5 @@
 import express from 'express';
+import http from 'http';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -12,11 +13,16 @@ import chatUserPreferencesRouter from './src/routes/chatUserPreferences.route.js
 import chatsRouter from './src/routes/chats.route.js';
 import { verifyToken } from './src/middlewares/verifyToken.middleware.js';
 import { ensureChatUserExists } from './src/middlewares/ensureChatUserExists.middleware.js';
+import { initSocket } from './src/sockets/socket.js';
 
+const app = express();
+//Creating a http server for implementation of sockets as it works on top of http server and we need a raw http server not a helper / request handler .
+const httpServer = http.createServer(app);
+// Socket.io setup
+initSocket(httpServer);
 //Connecting to Database
 db();
 dotenv.config();
-const app = express();
 const port = process.env.PORT || 3000;
 app.use(
   cors({
@@ -48,6 +54,6 @@ app.get('/', (req, res) => {
   res.status(200).json(new ApiResponse(200, null, 'Chat App API is Live'));
 });
 
-app.listen(port, () => {
+httpServer.listen(port, () => {
   console.log(`Chat App  is live on  ${process.env.serverOrigin}:${port}`);
 });

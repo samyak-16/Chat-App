@@ -1,20 +1,15 @@
-// Message Controller Outline
+import { getIo } from '../sockets/socket.js';
 
 // Send a message to a chat
-const sendMessage = async (req, res) => {}
+const sendMessage = async (req, res) => {};
 
 // Get messages in a chat (with pagination)
-const getMessages = async (req, res) => {}
+const getMessages = async (req, res) => {};
 
 // Mark a message as seen
-const markMessageAsSeen = async (req, res) => {}
+const markMessageAsSeen = async (req, res) => {};
 
 // Soft delete a message for current user
-const softDeleteMessage = async (req, res) => {}
+const softDeleteMessage = async (req, res) => {};
 
-export {
-  sendMessage,
-  getMessages,
-  markMessageAsSeen,
-  softDeleteMessage
-};
+export { sendMessage, getMessages, markMessageAsSeen, softDeleteMessage };

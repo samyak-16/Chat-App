@@ -10,7 +10,7 @@ import {
   sendMessage,
   getMessages,
   markMessageAsSeen,
-  softDeleteMessage
+  softDeleteMessage,
 } from '../controllers/message.controller.js';
 
 const router = express.Router();
@@ -28,4 +28,3 @@ router.post('/:msgId/seen', markMessageAsSeen);
 router.post('/:msgId/delete', softDeleteMessage);
 
 export default router;
-
