@@ -12,11 +12,12 @@ import {
   markMessageAsSeen,
   softDeleteMessage,
 } from '../controllers/message.controller.js';
+import { upload } from '../middlewares/multer.middleware.js';
 
 const router = express.Router();
 
 // Route to send a message
-router.post('/send', sendMessage);
+router.post('/send', upload.array('media', 5), sendMessage);
 
 // Route to get messages of a chat (with pagination)
 router.get('/:chatId', getMessages);
