@@ -52,7 +52,7 @@ app.use('/api/user', chatUserPreferencesRouter);
 
 //Routing Ends here
 
-//Global Error Handling Middleware (Multer)   :
+//Global Error Handling Middleware (Multer)   : 
 app.use(multerErrorHandler);
 
 app.get('/', (req, res) => {
