@@ -14,6 +14,7 @@ import chatsRouter from './src/routes/chats.route.js';
 import { verifyToken } from './src/middlewares/verifyToken.middleware.js';
 import { ensureChatUserExists } from './src/middlewares/ensureChatUserExists.middleware.js';
 import { initSocket } from './src/sockets/socket.js';
+import { multerErrorHandler } from './src/middlewares/multerErrorHandler.middleware.js';
 
 const app = express();
 //Creating a http server for implementation of sockets as it works on top of http server and we need a raw http server not a helper / request handler .
@@ -26,7 +27,8 @@ dotenv.config();
 const port = process.env.PORT || 3000;
 app.use(
   cors({
-    origin: process.env.clientOrigin,
+    // origin: process.env.clientOrigin,
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -49,6 +51,9 @@ app.use('/api/messages', messagesRouter);
 app.use('/api/user', chatUserPreferencesRouter);
 
 //Routing Ends here
+
+//Global Error Handling Middleware (Multer)   :
+app.use(multerErrorHandler);
 
 app.get('/', (req, res) => {
   res.status(200).json(new ApiResponse(200, null, 'Chat App API is Live'));
