@@ -13,13 +13,18 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['text', 'image', 'file', 'audio', 'video'],
+      enum: ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg', 'text'],
       default: 'text',
     },
     content: {
       type: String,
       required: true,
     },
+    isDelivered: {
+      type: Boolean,
+      default: false,
+    },
+
     seenBy: {
       type: [String], // userIds
       default: [],
@@ -32,4 +37,4 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Message =   mongoose.model('Message', messageSchema);
+export const Message = mongoose.model('Message', messageSchema);
