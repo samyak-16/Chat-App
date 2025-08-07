@@ -3,9 +3,9 @@ import jwt from 'jsonwebtoken';
 import Redis from 'ioredis';
 import { ChatUser } from '../models/chatUser.model.js';
 import { emitStatusToParticipants } from '../utils/emitStatusToParticipants.js';
+import { Chat } from '../models/chat.model.js';
 
 const redis = new Redis();
-
 let io;
 
 export const initSocket = (server) => {
@@ -38,6 +38,15 @@ export const initSocket = (server) => {
       return;
     }
     console.log('User connected:', socket.user.email);
+
+    // Joining to all chat room  where user is participant :
+
+    const chats = await Chat.find({ participants: userId }).select('_id');
+    if (chats) {
+      chats.forEach((chat) => {
+        socket.join(chat._id.toString());
+      });
+    }
 
     // 1. Check if user was already online BEFORE adding this socket ID
     // Redis SCARD returns 0 if the set doesn't exist yet
