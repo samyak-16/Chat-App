@@ -1,6 +1,65 @@
 Full Exp : https://chatgpt.com/share/6865439d-0260-800b-86ab-e4010ef11c05
 -- https://www.masterji.co/project/be50e655-d311-4811-9a18-e1ce0d19299c
-
+-----------------------------------------------------------------------
 Problem when we try to create chat with same two participants (OwnSelf) -- > https://chatgpt.com/share/687ab06b-7b64-800b-b6c3-b6cb35926a0a
-
+----------------------------------------------------------------------------
 cant use await in forEach() instead use for loop  
+-------------------------------------------------------
+Finally understood http req body : 
+
+http req body depents on content type , like how data is sent 
+We use app.use(express.json()) middle ware to parse json , similarly 
+For file uploads (multipart/form-data), we use tools like Multer , in middleware 
+------------------------------------------------------------------------
+Global Error Handler Middleware  :  
+
+Global Error Handler is a special Express middleware that takes four parameters: (err, req, res, next). It acts like a centralized try-catch block for your entire app, catching errors passed via next(err) from any route or middleware.
+
+It behaves like try-catch, allowing you to catch errors thrown during request handling in one central place. However, it does not automatically catch errors in asynchronous (async) functions. For those, you need to use manual try-catch blocks or wrap the async functions with a custom handler that catches errors and passes them to next().
+
+Errors thrown by libraries like Multer or custom validation errors (if you use next(err)) are automatically handled by the global error handler because they follow Express's error handling mechanism.
+
+---------------------------------------------------------------------------
+
+
+Send Message Architecture Summary : 
+
+🧠 When a client connects: 
+
+Socket server authenticates using JWT (io.use)
+
+Finds all chat rooms the user belongs to
+
+Joins those rooms: socket.join(chatId)
+
+Tracks online presence via Redis (sadd, srem)
+
+Emits user_status_changed to other users
+
+💬 When a message is sent via API:
+
+sendMessage is hit via HTTP POST
+
+Backend validates input, stores message in MongoDB
+
+Uses getIo() to broadcast to room chatId
+
+Frontend (already joined to room via socket) receives it via:
+   - socket.on('new_message', (msg) => { ... })
+
+🔄 Redis Tracks:
+
+Socket IDs per user
+
+Online/offline status
+
+------------------------------------------------------------------
+
+| Email                                                 | User ID                  | Password |
+| ----------------------------------------------------- | ------------------------ | -------- |
+| [samyak@chat.test.com](mailto:samyak@chat.test.com)   | 68949ca2e36d65cad2b71204 | abcdefg  |
+| [samyak@chat.test1.com](mailto:samyak@chat.test1.com) | 68949cfde36d65cad2b7120a | abcdefg  |
+| [samyak@chat.test2.com](mailto:samyak@chat.test2.com) | 68949d2ae36d65cad2b71210 | abcdefg  |
+| [samyak@chat.test3.com](mailto:samyak@chat.test3.com) | 68949d54e36d65cad2b71216 | abcdefg  |
+| [samyak@chat.test4.com](mailto:samyak@chat.test4.com) | 68949f3ce36d65cad2b71228 | abcdefg  | admin (Test Group)
+.
