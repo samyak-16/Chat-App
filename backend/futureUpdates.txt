@@ -18,7 +18,25 @@ Enhancements in removeUserFromGoup :
 
   only the group owner should be able to remove another admin or you want a warning . 
 
+-----------------------------------------------------------------
 
 
 Enhancements in filterValidUserIds : 
-It should also check if chatIds are mooongoose objectIds or not  
+It should also check if chatIds are mooongoose objectIds or not 
+------------------------------------------------------------------
+Enhancements while joining chats to room : 
+
+Your method works well but just be careful with scaling later:
+
+If a user is in 100+ chats (esp. large groups), auto-joining all might:
+
+Use more memory
+
+Emit unnecessary events to inactive chats
+
+At scale, most apps do lazy joining (join_chat on frontend) instead
+
+-----------------------------------------------------------------
+
+Add typing indicator when someone is sending message  
+------------------------------------------------------------------
