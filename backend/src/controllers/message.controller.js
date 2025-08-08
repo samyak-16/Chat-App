@@ -4,16 +4,12 @@ import { ApiError } from '../utils/api-error.js';
 import { Chat } from '../models/chat.model.js';
 import { Message } from '../models/message.model.js';
 import { ApiResponse } from '../utils/api-response.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 // Send a message to a chat
 const sendMessage = async (req, res) => {
-  //   console.log(req.files);
-  //    res.json({
-  //   message: 'Files uploaded successfully!',
-  //   files: req.files,
-  // });
   const io = getIo();
   const userId = req.user?.userId;
-  const files = req.files;
+  const files = req.files || [];
   const chatId = req.body?.chatId;
   const textMessage = req.body?.textMessage;
   if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
@@ -51,11 +47,21 @@ const sendMessage = async (req, res) => {
 
     if (files.length >= 1) {
       for (const file of files) {
+        const result = await uploadOnCloudinary(file.path);
+        if (!result) {
+          // Skip this file
+          console.warn(
+            `Skipping file ${file.originalname} due to upload failure`
+          );
+          continue;
+        }
+
+        const cloudinaryFileLink = result.secure_url;
         const message = await Message.create({
           chatId,
           senderId: userId,
           type: file.mimetype,
-          content: 'Link By cloudinary --)', // TODO
+          content: cloudinaryFileLink,
         });
         await io.to(chatId.toString()).emit('new_message', {
           _id: message._id,
