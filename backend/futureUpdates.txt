@@ -40,3 +40,14 @@ At scale, most apps do lazy joining (join_chat on frontend) instead
 
 Add typing indicator when someone is sending message  
 ------------------------------------------------------------------
+
+Use webSockets for both frontend and backend - now im using REST for frontend and WebSocket for backend . 
+
+-------------------------------------------------------------------
+In : softDeleteMessage controller  - 
+     // Optionally emit a socket event to notify user(s) about deletion 
+
+
+-------------------------------------------------------------------------
+
+Notify user throgh browser Notification when someOne sent any message 
