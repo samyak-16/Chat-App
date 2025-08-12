@@ -1,63 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Socket.IO Status Test</title>
+    <title>Vite + React</title>
   </head>
   <body>
-    <h2>Socket.IO Status Test</h2>
-    <label>User Token:</label>
-    <input
-      type="text"
-      id="tokenInput"
-      placeholder="Paste JWT token here"
-      size="60"
-    />
-    <button onclick="connectSocket()">Connect</button>
-
-    <div
-      id="log"
-      style="margin-top: 20px; white-space: pre-wrap; font-family: monospace"
-    ></div>
-
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-      let socket;
-
-      function log(message) {
-        document.getElementById('log').textContent += message + '\n';
-      }
-
-      function connectSocket() {
-        const token = document.getElementById('tokenInput').value;
-        if (!token) {
-          return alert('Please provide a JWT token');
-        }
-
-        // Connect with JWT via `auth`
-        socket = io('http://localhost:4000', {
-          auth: {
-            token: token,
-          },
-        });
-
-        socket.on('connect', () => {
-          log(`[✅ Connected] Socket ID: ${socket.id}`);
-        });
-
-        socket.on('connect_error', (err) => {
-          log(`[❌ Connect Error] ${err.message}`);
-        });
-
-        socket.on('disconnect', () => {
-          log(`[🔌 Disconnected]`);
-        });
-
-        socket.on('user_status_changed', ({ userId, status }) => {
-          log(`[📡 Status Update] ${userId} is now ${status}`);
-        });
-      }
-    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
