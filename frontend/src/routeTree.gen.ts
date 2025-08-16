@@ -15,10 +15,10 @@ import { Route as ChatsIndexRouteImport } from './routes/chats/index'
 import { Route as SettingsNicknameRouteImport } from './routes/settings/nickname'
 import { Route as SettingsMuteChatRouteImport } from './routes/settings/mute-chat'
 import { Route as ChatsChar91chatIdChar93RouteImport } from './routes/chats/[chatId]'
-import { Route as AuthVerifyEmailRouteImport } from './routes/auth/verify-email'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth/forgot-password'
+import { Route as AuthVerifyEmailTokenRouteImport } from './routes/auth/verify-email.$token'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -50,11 +50,6 @@ const ChatsChar91chatIdChar93Route = ChatsChar91chatIdChar93RouteImport.update({
   path: '/chats/[chatId]',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthVerifyEmailRoute = AuthVerifyEmailRouteImport.update({
-  id: '/auth/verify-email',
-  path: '/auth/verify-email',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
   id: '/auth/register',
   path: '/auth/register',
@@ -70,6 +65,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/auth/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyEmailTokenRoute = AuthVerifyEmailTokenRouteImport.update({
+  id: '/auth/verify-email/$token',
+  path: '/auth/verify-email/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -77,11 +77,11 @@ export interface FileRoutesByFullPath {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/chats/[chatId]': typeof ChatsChar91chatIdChar93Route
   '/settings/mute-chat': typeof SettingsMuteChatRoute
   '/settings/nickname': typeof SettingsNicknameRoute
   '/chats': typeof ChatsIndexRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,11 +89,11 @@ export interface FileRoutesByTo {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/chats/[chatId]': typeof ChatsChar91chatIdChar93Route
   '/settings/mute-chat': typeof SettingsMuteChatRoute
   '/settings/nickname': typeof SettingsNicknameRoute
   '/chats': typeof ChatsIndexRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,11 +102,11 @@ export interface FileRoutesById {
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
-  '/auth/verify-email': typeof AuthVerifyEmailRoute
   '/chats/[chatId]': typeof ChatsChar91chatIdChar93Route
   '/settings/mute-chat': typeof SettingsMuteChatRoute
   '/settings/nickname': typeof SettingsNicknameRoute
   '/chats/': typeof ChatsIndexRoute
+  '/auth/verify-email/$token': typeof AuthVerifyEmailTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,11 +116,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
-    | '/auth/verify-email'
     | '/chats/[chatId]'
     | '/settings/mute-chat'
     | '/settings/nickname'
     | '/chats'
+    | '/auth/verify-email/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,11 +128,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
-    | '/auth/verify-email'
     | '/chats/[chatId]'
     | '/settings/mute-chat'
     | '/settings/nickname'
     | '/chats'
+    | '/auth/verify-email/$token'
   id:
     | '__root__'
     | '/'
@@ -140,11 +140,11 @@ export interface FileRouteTypes {
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/register'
-    | '/auth/verify-email'
     | '/chats/[chatId]'
     | '/settings/mute-chat'
     | '/settings/nickname'
     | '/chats/'
+    | '/auth/verify-email/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -153,11 +153,11 @@ export interface RootRouteChildren {
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
-  AuthVerifyEmailRoute: typeof AuthVerifyEmailRoute
   ChatsChar91chatIdChar93Route: typeof ChatsChar91chatIdChar93Route
   SettingsMuteChatRoute: typeof SettingsMuteChatRoute
   SettingsNicknameRoute: typeof SettingsNicknameRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
+  AuthVerifyEmailTokenRoute: typeof AuthVerifyEmailTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -204,13 +204,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatsChar91chatIdChar93RouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/verify-email': {
-      id: '/auth/verify-email'
-      path: '/auth/verify-email'
-      fullPath: '/auth/verify-email'
-      preLoaderRoute: typeof AuthVerifyEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/register': {
       id: '/auth/register'
       path: '/auth/register'
@@ -232,6 +225,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verify-email/$token': {
+      id: '/auth/verify-email/$token'
+      path: '/auth/verify-email/$token'
+      fullPath: '/auth/verify-email/$token'
+      preLoaderRoute: typeof AuthVerifyEmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -241,11 +241,11 @@ const rootRouteChildren: RootRouteChildren = {
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
-  AuthVerifyEmailRoute: AuthVerifyEmailRoute,
   ChatsChar91chatIdChar93Route: ChatsChar91chatIdChar93Route,
   SettingsMuteChatRoute: SettingsMuteChatRoute,
   SettingsNicknameRoute: SettingsNicknameRoute,
   ChatsIndexRoute: ChatsIndexRoute,
+  AuthVerifyEmailTokenRoute: AuthVerifyEmailTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
