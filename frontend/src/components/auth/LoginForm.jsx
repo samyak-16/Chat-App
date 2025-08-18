@@ -6,6 +6,7 @@ import Button from './Button';
 import ErrorMessage from './ErrorMessage';
 import OkMessage from './OkMessage';
 import { loginUser } from '../../api/auth';
+import { useAuth } from '../../store/useAuth';
 
 const LoginForm = () => {
   const [form, setForm] = useState({
@@ -15,9 +16,13 @@ const LoginForm = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // const { setUser } = useAuth(); // Rerenders everyTime so not useFull - Read Zustand.md
+  const setUser = useAuth((state) => state.setUser);
+  //Here state is the whole store object
+  // The selector (state) => state.setUser returns only the piece of state or function you want.
 
   const appToken = import.meta.env.VITE_BACKEND_APP_TOKE_FOR_AUTH;
-  const navigate = useNavigate();
+  const navigate = useNavigate(); //TODO
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevents reload on submit
@@ -32,6 +37,7 @@ const LoginForm = () => {
       setIsLoading(true);
       const response = await loginUser({ ...form, appToken });
       localStorage.setItem('token', response.data.token);
+      setUser(response.user);
       setError('');
       setMessage(response.message);
       // setTimeout(() => {

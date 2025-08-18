@@ -41,3 +41,17 @@ export const verifyUser = async (token) => {
     throw error.response?.data || { message: 'Something went wrong' };
   }
 };
+
+export const logoutUser = async () => {
+  try {
+    const response = await axios.post(
+      `${AUTH_API_BASE}/auth/logout`,
+
+      {
+        withCredentials: true,
+      }
+    );
+  } catch (error) {
+    throw error.response?.data || { message: 'Something went wrong' };
+  }
+};
