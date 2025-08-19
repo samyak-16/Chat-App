@@ -35,7 +35,9 @@ export const loginUser = async (credentials) => {
 
 export const verifyUser = async (token) => {
   try {
-    const response = await axios.get(`${AUTH_API_BASE}/verify-email/${token}`);
+    const response = await axios.get(
+      `${AUTH_API_BASE}/auth/verify-email/${token}`
+    );
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Something went wrong' };
@@ -51,6 +53,37 @@ export const logoutUser = async () => {
         withCredentials: true,
       }
     );
+  } catch (error) {
+    throw error.response?.data || { message: 'Something went wrong' };
+  }
+};
+
+export const forgotPassword = async (credentials) => {
+  try {
+    const response = await axios.post(
+      `${AUTH_API_BASE}/auth/forgot-password`,
+      credentials,
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Something went wrong' };
+  }
+};
+export const resetPassword = async (credentials) => {
+  try {
+    const response = await axios.post(
+      `${AUTH_API_BASE}/auth/reset-password/${credentials.token}`,
+      { password: credentials.password, appToken: credentials.appToken },
+      {
+        withCredentials: true,
+      }
+    );
+
+    return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Something went wrong' };
   }

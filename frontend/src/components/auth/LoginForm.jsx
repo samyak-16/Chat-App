@@ -7,6 +7,7 @@ import ErrorMessage from './ErrorMessage';
 import OkMessage from './OkMessage';
 import { loginUser } from '../../api/auth';
 import { useAuth } from '../../store/useAuth';
+import RedirectLink from './RedirectLink';
 
 const LoginForm = () => {
   const [form, setForm] = useState({
@@ -80,6 +81,11 @@ const LoginForm = () => {
         <OkMessage message={message} />
         <Button disabled={isLoading} type="submit" label="Login" />
       </form>
+      <RedirectLink
+        text="Forgot your password?"
+        linkText="Reset Password"
+        to="/auth/forgot-password"
+      />
     </AuthCard>
   );
 };

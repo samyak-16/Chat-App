@@ -7,9 +7,10 @@ export const useAuth = create((set) => ({
   //Implicit return
   user: null, // state
 
-  setUser: (user) => set({ user }), // action 
+  setUser: (user) => set({ user }), // action
 
-  logout: async () => {  // action 
+  logout: async () => {
+    // action
     try {
       // API call
       await logoutUser(); // Removes cookies used for auth
