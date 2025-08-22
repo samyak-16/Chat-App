@@ -455,94 +455,103 @@ const addUsersToGroup = async (req, res) => {
 };
 
 // Remove users from group chat
+// Remove users from group chat
 const removeUsersFromGroup = async (req, res) => {
-  // Extract chatId from URL params
+  // 1. Extract chatId from URL params
   const chatId = req.params?.chatId;
-  if (!chatId) {
-    // chatId is required to identify which group to remove users from
+
+  // 2. Extract the ID of the user making the request (authenticated user)
+  const userId = req.user?.userId;
+
+  // 3. Extract the list of user IDs to remove from request body
+  const rawParticipantsId = req.body?.participantsId;
+
+  // 4. Validate required parameters
+  if (!chatId)
     return res
       .status(400)
       .json(new ApiError(400, 'chatId is required in params'));
-  }
 
-  // Get the ID of the user making the request from the authenticated token
-  const userId = req.user?.userId;
-
-  // Extract the list of user IDs to remove from request body
-  const rawParticipantsId = req.body?.participantsId;
-
-  // Validate participantsId is a non-empty array
-  if (!Array.isArray(rawParticipantsId) || rawParticipantsId.length === 0) {
+  if (!Array.isArray(rawParticipantsId) || rawParticipantsId.length === 0)
     return res
       .status(400)
       .json(new ApiError(400, 'participantsId must be a non-empty array'));
-  }
 
-  // Validate chatId is a valid MongoDB ObjectId string
-  if (!mongoose.Types.ObjectId.isValid(chatId)) {
+  if (!mongoose.Types.ObjectId.isValid(chatId))
     return res
       .status(400)
       .json(new ApiError(400, 'chatId must be a valid ObjectId'));
-  }
 
-  // Remove duplicate IDs from participants list (Set removes duplicates)
+  // 5. Remove duplicate IDs from participants list
   const participantsId = [...new Set(rawParticipantsId)];
 
-  // Prevent user from including themselves in participantsId
-  if (participantsId.includes(userId)) {
+  // 6. Prevent user from including themselves
+  if (participantsId.includes(userId))
     return res
       .status(400)
       .json(new ApiError(400, 'You cannot include yourself in participantsId'));
-  }
 
   try {
-    // Fetch the chat document by its ID
+    // 7. Fetch the chat document by its ID
     const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json(new ApiError(404, 'Chat not found'));
 
-    // If chat not found, return 404
-    if (!chat) {
-      return res.status(404).json(new ApiError(404, 'Chat not found'));
-    }
-
-    // Ensure the chat is a group chat
-    if (!chat.isGroup) {
+    // 8. Ensure the chat is a group chat
+    if (!chat.isGroup)
       return res
         .status(400)
         .json(new ApiError(400, 'Provided chat is not a group chat'));
-    }
 
-    // Only admins can remove participants, check if current user is admin
-    if (!chat.admins.includes(userId)) {
+    // 9. Only admins can remove participants
+    if (!chat.admins.includes(userId))
       return res
         .status(403)
         .json(new ApiError(403, 'Only admin can remove participants'));
-    }
 
-    // Validate provided participants IDs against actual users (returns valid IDs)
+    // 10. Validate provided participants IDs against actual users
     const { validUserIds } = await filterValidUserIds(participantsId);
-
-    // If no valid user IDs found, return error
-    if (validUserIds.length === 0) {
+    if (validUserIds.length === 0)
       return res
         .status(400)
         .json(new ApiError(400, 'No valid participantsId found'));
-    }
 
-    // Remove each valid user ID from participants and admins array (if present)
-    validUserIds.forEach((id) => {
-      chat.participants.pull(id);
-      chat.admins.pull(id);
+    // 11. Filter out users that cannot be removed by the requester
+    const filteredUserIds = validUserIds.filter((id) => {
+      // Skip creator if requester is not creator
+      if (id === chat.createdBy && userId !== chat.createdBy) return false;
+
+      // Skip other admins if requester is not creator
+      if (chat.admins.includes(id) && userId !== chat.createdBy) return false;
+
+      return true;
     });
 
-    // Save changes to the chat document
+    // 12. If no valid users left after filtering, return error
+    if (filteredUserIds.length === 0)
+      return res
+        .status(400)
+        .json(
+          new ApiError(
+            400,
+            'You cannot remove the group creator or other admins'
+          )
+        );
+
+    // 13. Remove each valid user ID from participants and admins arrays
+    filteredUserIds.forEach((id) => {
+      chat.participants.pull(id); // Remove from participants
+      chat.admins.pull(id); // Remove from admins if present
+    });
+
+    // 14. Save changes to the chat document
     await chat.save();
 
-    // Return success response with updated chat object
+    // 15. Return success response with updated chat object
     return res
       .status(200)
       .json(new ApiResponse(200, chat, 'Participants removed successfully'));
   } catch (error) {
-    // Log error and return internal server error response
+    // 16. Log unexpected errors
     console.error('Error while removing user from the group:', error);
     return res
       .status(500)
