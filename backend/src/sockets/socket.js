@@ -4,6 +4,7 @@ import Redis from 'ioredis';
 import { ChatUser } from '../models/chatUser.model.js';
 import { emitStatusToParticipants } from '../utils/emitStatusToParticipants.js';
 import { Chat } from '../models/chat.model.js';
+import { registerTypingEvents } from '../utils/emitTypingEvents.js';
 
 const redis = new Redis();
 let io;
@@ -47,6 +48,9 @@ export const initSocket = (server) => {
         socket.join(chat._id.toString());
       });
     }
+
+    //Register Typing status :)
+    registerTypingEvents(socket);
 
     // 1. Check if user was already online BEFORE adding this socket ID
     // Redis SCARD returns 0 if the set doesn't exist yet
