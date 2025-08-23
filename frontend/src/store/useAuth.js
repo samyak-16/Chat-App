@@ -1,10 +1,12 @@
 // src/store/useAuth.js
 import { create } from 'zustand';
-import { logoutUser } from '../api/auth';
+import { logoutUser } from '../api/auth.api';
 
 // store/useAuth.js
 export const useAuth = create((set) => ({
   //Implicit return
+
+  
   user: null, // state
 
   setUser: (user) => set({ user }), // action
