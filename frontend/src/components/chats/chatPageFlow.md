@@ -72,12 +72,7 @@ The chat page is a **two-column layout**:
 ### 4. ChatWindow (Right Column)
 
 - **Layout:**
- |ChatHeader|
- |MessageList(scrollable)|
- |-Messages|
- |-Typing Indicator|
- |MessageInput(textBox + send btn)|
-
+![alt text](image-2.png)
      - **Props:**
 - `chat` → The currently selected chat.
 - **State:**
@@ -103,5 +98,6 @@ The chat page is a **two-column layout**:
 - **Single Source of Truth**: `selectedChat` lives only in `ChatPage`.  
 - **Global Auth State**: Managed by Zustand (`useAuth`).  
 - **Clean Layout**: Two-column design keeps UI intuitive (left = navigation, right = detail).  
+
 
       
