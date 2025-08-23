@@ -5,9 +5,10 @@ import AuthCard from './AuthCard';
 import Button from './Button';
 import ErrorMessage from './ErrorMessage';
 import OkMessage from './OkMessage';
-import { loginUser } from '../../api/auth';
+import { loginUser } from '../../api/auth.api';
 import { useAuth } from '../../store/useAuth';
 import RedirectLink from './RedirectLink';
+import { getMe } from '@/api/chatUser.api';
 
 const LoginForm = () => {
   const [form, setForm] = useState({
@@ -38,7 +39,15 @@ const LoginForm = () => {
       setIsLoading(true);
       const response = await loginUser({ ...form, appToken });
       localStorage.setItem('token', response.data.token);
-      setUser(response.user);
+      // Merging authUser with chatApp user (Both userId is same) only added extra fields in existing user object  : )
+      const getMeResponse = await getMe();
+      const filterGetMeResponse = {
+        archivedChats: getMeResponse.archivedChats,
+        nickname: getMeResponse.nickname,
+        status: getMeResponse.status,
+        mutedChats: getMeResponse.mutedChats,
+      };
+      setUser({ ...response.user, ...filterGetMeResponse });
       setError('');
       setMessage(response.message);
       // setTimeout(() => {

@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'; // or your router
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { resetPassword } from '@/api/auth'; // your API function
+import { resetPassword } from '@/api/auth.api'; // your API function
 
 const ResetPasswordForm = ({ token }) => {
   const navigate = useNavigate();

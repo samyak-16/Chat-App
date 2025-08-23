@@ -5,7 +5,7 @@ import Button from './Button';
 import ErrorMessage from './ErrorMessage';
 import RedirectLink from './RedirectLink';
 import AuthCard from './AuthCard';
-import { registerUser } from '../../api/auth';
+import { registerUser } from '../../api/auth.api';
 import OkMessage from './OkMessage';
 
 const SignupForm = () => {

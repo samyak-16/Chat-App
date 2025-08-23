@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { forgotPassword } from '@/api/auth';
+import { forgotPassword } from '@/api/auth.api';
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState('');
