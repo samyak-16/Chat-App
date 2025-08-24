@@ -93,8 +93,8 @@ const sendMessage = async (req, res) => {
       chat.lastMessageId = lastMsg._id;
       await chat.save();
 
-      // Emit the last message to all participants in the room
-      io.to(chatId.toString()).emit('new_message', lastMsg);
+      // Emit all message to all participants in the room
+      io.to(chatId.toString()).emit('new_message', createdMessage);
     }
 
     // 5️⃣ Respond to API request
@@ -125,7 +125,7 @@ const getMessages = async (req, res) => {
       .json(new ApiError(400, 'chatId should be a valid moongoose objectId'));
   }
   const limit = parseInt(req.query.limit) || 20;
-  const before = req.query.before; // timestamp string or ISO string
+  const before = req.query.before; // timestamp string or ISO string of the last message
 
   try {
     const chat = await Chat.findById(chatId);
