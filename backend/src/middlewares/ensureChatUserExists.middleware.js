@@ -3,6 +3,7 @@ import { ChatUser } from '../models/chatUser.model.js';
 import { ApiError } from '../utils/api-error.js';
 
 const ensureChatUserExists = async (req, res, next) => {
+  //TODO : add avatar field  into the chatUser model , the online link for the avator will be fetched from auth-user just like userId , nickname ; 
   const userId = req.user?.userId; // From verified JWT
   const name = req.user?.name;
   if (!userId) {

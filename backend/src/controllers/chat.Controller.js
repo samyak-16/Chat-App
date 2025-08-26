@@ -255,33 +255,69 @@ const archiveOrUnarchiveChats = async (req, res) => {
 // Get all chats for current user (preview)
 
 const getAllChatsForUser = async (req, res) => {
-  const userId = req.user?.userId;
+  const userId = req.user?.userId; // Authenticated user ID
   if (!userId) {
     return res
       .status(400)
-      .json(new ApiError(400, 'userId is requires in req object'));
+      .json(new ApiError(400, 'userId is required in req object'));
   }
   try {
-    const chats = await Chat.find({ participants: userId }).sort({
-      updatedAt: -1,
-    }); // -1 = descending (latest first)
-
+    // 1️⃣ Fetch all chats where the user is a participant
+    const chats = await Chat.find({ participants: userId })
+      .populate('lastMessageId') // Bring in last message details
+      .sort({ updatedAt: -1 }); // Latest updated chats first
     if (chats.length === 0) {
       return res
         .status(404)
         .json(
           new ApiError(
             404,
-            'No chats Found For the user Please start a new Chat'
+            'No chats found for the user. Please start a new chat.'
           )
         );
     }
+    // 2️⃣ Collect all unique participant IDs from all chats
+    const participantIds = [
+      ...new Set(chats.flatMap((chat) => chat.participants)),
+    ];
+    // 3️⃣ Fetch ChatUser docs for these participant IDs
+    //    - Select only needed fields: nickname, avatar, status
+    const chatUsers = await ChatUser.find({
+      userId: { $in: participantIds },
+    }).select('userId nickname avatar status');
+
+    // 4️⃣ Build a lookup map for easy access
+    const chatUserMap = {};
+    chatUsers.forEach((user) => {
+      chatUserMap[user.userId] = user;
+    });
+
+    // 5️⃣ Enrich each chat's participants with ChatUser info
+    const enrichedChats = chats.map((chat) => {
+      return {
+        ...chat.toObject(),
+        participants: chat.participants.map(
+          (id) => chatUserMap[id] || { userId: id } // fallback if user not found
+        ),
+      };
+    });
+
+    // 6️⃣ Send enriched chats to frontend
     return res
       .status(200)
-      .json(new ApiResponse(200, chats, "Sorted lists of the user's chat "));
+      .json(
+        new ApiResponse(
+          200,
+          enrichedChats,
+          "Sorted list of user's chats with participant info"
+        )
+      );
   } catch (error) {
-    console.error('Error while fetching AllChats for the user :( ');
-    res
+    console.error(
+      'Error while fetching all chats for the user:',
+      error.message
+    );
+    return res
       .status(500)
       .json(new ApiError(500, 'Internal Server Error at getAllChatsForUser'));
   }
