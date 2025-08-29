@@ -59,6 +59,37 @@ app.get('/', (req, res) => {
   res.status(200).json(new ApiResponse(200, null, 'Chat App API is Live'));
 });
 
+// Test endpoint to check uploads directory
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  const uploadsDir = path.join(__dirname, 'uploads');
+  
+  try {
+    if (fs.existsSync(uploadsDir)) {
+      const files = fs.readdirSync(uploadsDir);
+      res.status(200).json({
+        success: true,
+        message: 'Uploads directory exists',
+        path: uploadsDir,
+        files: files
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: 'Uploads directory does not exist',
+        path: uploadsDir
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error checking uploads directory',
+      error: error.message
+    });
+  }
+});
+
 httpServer.listen(port, () => {
   console.log(`Chat App  is live on  ${process.env.serverOrigin}:${port}`);
 });

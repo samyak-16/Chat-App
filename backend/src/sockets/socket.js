@@ -65,12 +65,16 @@ export const initSocket = (server) => {
       try {
         const user = await ChatUser.findOne({ userId });
         if (!user) return;
+        console.log(`User ${userId} (${socket.user.email}) going online`);
         await emitStatusToParticipants(userId, 'online');
         user.status = 'online';
         await user.save();
+        console.log(`User ${userId} status updated to online in database`);
       } catch (error) {
         console.error('Error updating user status to online:', error);
       }
+    } else {
+      console.log(`User ${userId} (${socket.user.email}) already online, no status change needed`);
     }
 
     // Handle socket disconnect
@@ -88,13 +92,17 @@ export const initSocket = (server) => {
         try {
           const user = await ChatUser.findOne({ userId });
           if (!user) return;
+          console.log(`User ${userId} (${socket.user.email}) going offline`);
           await emitStatusToParticipants(userId, 'offline');
           user.status = 'offline';
           user.lastSeen = new Date(); // update last seen time
           await user.save();
+          console.log(`User ${userId} status updated to offline in database, lastSeen: ${user.lastSeen}`);
         } catch (error) {
           console.error('Error updating user status to offline:', error);
         }
+      } else {
+        console.log(`User ${userId} (${socket.user.email}) still has ${remaining} active connections`);
       }
     });
   });

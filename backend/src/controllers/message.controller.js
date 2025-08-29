@@ -14,6 +14,14 @@ const sendMessage = async (req, res) => {
   const chatId = req.body?.chatId; // Chat ID from request body
   const textMessage = req.body?.textMessage; // Optional text message
 
+  console.log('Send message request:', {
+    userId,
+    chatId,
+    textMessage,
+    filesCount: files.length,
+    files: files.map(f => ({ name: f.originalname, path: f.path, mimetype: f.mimetype }))
+  });
+
   // Validate chatId
   if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
     return res
@@ -53,22 +61,45 @@ const sendMessage = async (req, res) => {
 
     // 1️⃣ Handle file uploads (images, audio, video, docs)
     for (const file of files) {
-      const result = await uploadOnCloudinary(file.path);
-      if (!result) {
-        console.warn(
-          `Skipping file ${file.originalname} due to upload failure`
-        );
-        continue; // Skip failed uploads
+      try {
+        console.log('Processing file:', file.originalname, 'Path:', file.path);
+        
+        // Check if file exists
+        if (!file.path) {
+          console.error('File path is missing for:', file.originalname);
+          continue;
+        }
+
+        const result = await uploadOnCloudinary(file.path);
+        if (!result) {
+          console.warn(
+            `Skipping file ${file.originalname} due to upload failure`
+          );
+          continue; // Skip failed uploads
+        }
+
+        const message = await Message.create({
+          chatId,
+          senderId: userId,
+          type: file.mimetype, // Store the file type
+          content: result.secure_url, // Cloudinary link
+        });
+
+        createdMessage.push(message);
+        
+        // Clean up the temporary file after successful upload
+        try {
+          const fs = await import('fs');
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+        } catch (cleanupError) {
+          console.warn('Failed to cleanup temporary file:', cleanupError);
+        }
+      } catch (fileError) {
+        console.error('Error processing file:', file.originalname, fileError);
+        continue; // Skip this file and continue with others
       }
-
-      const message = await Message.create({
-        chatId,
-        senderId: userId,
-        type: file.mimetype, // Store the file type
-        content: result.secure_url, // Cloudinary link
-      });
-
-      createdMessage.push(message);
     }
 
     // 2️⃣ Handle text message

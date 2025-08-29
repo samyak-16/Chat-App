@@ -1,34 +1,29 @@
 // src/store/useAuth.js
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { logoutUser } from '../api/auth.api';
 
-// store/useAuth.js
-export const useAuth = create((set) => ({
-  //Implicit return
+export const useAuth = create(
+  persist(
+    (set) => ({
+      user: null,
 
-  
-  user: null, // state
+      setUser: (user) => set({ user }),
 
-  setUser: (user) => set({ user }), // action
-
-  logout: async () => {
-    // action
-    try {
-      // API call
-      await logoutUser(); // Removes cookies used for auth
-
-      // Clear tokens used for chat app to verify user
-      localStorage.removeItem('token');
-
-      // Reset state
-      set({ user: null });
-    } catch (err) {
-      console.error('Logout failed:', err);
-      // still clear client-side
-      localStorage.removeItem('accessToken');
-      set({ user: null });
+      logout: async () => {
+        try {
+          await logoutUser();
+          localStorage.removeItem('token'); // remove token
+          set({ user: null });
+        } catch (err) {
+          console.error('Logout failed:', err);
+          localStorage.removeItem('token');
+          set({ user: null });
+        }
+      },
+    }),
+    {
+      name: 'auth-storage', // key in localStorage
     }
-  },
-}));
-
-// Basic Overview of stateManagement using Zustand :
+  )
+);

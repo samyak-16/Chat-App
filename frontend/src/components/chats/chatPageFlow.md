@@ -72,8 +72,7 @@ The chat page is a **two-column layout**:
 ### 4. ChatWindow (Right Column)
 
 - **Layout:**
-![alt text](image-2.png)
-     - **Props:**
+  ![alt text](image-2.png) - **Props:**
 - `chat` → The currently selected chat.
 - **State:**
 - `messages` → All messages in this chat.
@@ -86,18 +85,17 @@ The chat page is a **two-column layout**:
 ---
 
 ## 🔹 Flow Summary
-1. **ChatPage** fetches `chats` and manages `selectedChat`.  
-2. **ChatList** displays all chats; clicking a chat → triggers `onSelectChat(chat)`.  
-3. **ChatPage** updates `selectedChat`.  
-4. **ChatWindow** renders the `selectedChat` (header, messages, typing, input).  
+
+1. **ChatPage** fetches `chats` and manages `selectedChat`.
+2. **ChatList** displays all chats; clicking a chat → triggers `onSelectChat(chat)`.
+3. **ChatPage** updates `selectedChat`.
+4. **ChatWindow** renders the `selectedChat` (header, messages, typing, input).
 5. **Auth user** is accessed via Zustand store → not passed as props.
 
 ---
 
 ## ✅ Key Design Decisions
-- **Single Source of Truth**: `selectedChat` lives only in `ChatPage`.  
-- **Global Auth State**: Managed by Zustand (`useAuth`).  
-- **Clean Layout**: Two-column design keeps UI intuitive (left = navigation, right = detail).  
 
-
-      
+- **Single Source of Truth**: `selectedChat` lives only in `ChatPage`.
+- **Global Auth State**: Managed by Zustand (`useAuth`).
+- **Clean Layout**: Two-column design keeps UI intuitive (left = navigation, right = detail).

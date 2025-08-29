@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE; // your Auth url
 
-
 export const registerUser = async (userData) => {
   try {
     const response = await axios.post(
@@ -26,6 +25,9 @@ export const loginUser = async (credentials) => {
         // Allows browser to send cookies and allow browser to accept the setCookie header sent by the server  :  “Hey, if the server sends me a Set-Cookie header in the response, don’t ignore it — actually save it.”
       }
     );
+    localStorage.setItem('token', response.data.data.token);
+    
+    
     return response.data;
   } catch (error) {
     console.log(error);

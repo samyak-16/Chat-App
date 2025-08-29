@@ -24,7 +24,7 @@ const LoginForm = () => {
   // The selector (state) => state.setUser returns only the piece of state or function you want.
 
   const appToken = import.meta.env.VITE_BACKEND_APP_TOKE_FOR_AUTH;
-  const navigate = useNavigate(); //TODO
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevents reload on submit
@@ -38,7 +38,6 @@ const LoginForm = () => {
     try {
       setIsLoading(true);
       const response = await loginUser({ ...form, appToken });
-      localStorage.setItem('token', response.data.token);
       // Merging authUser with chatApp user (Both userId is same) only added extra fields in existing user object  : )
       const getMeResponse = await getMe();
       const filterGetMeResponse = {
@@ -50,9 +49,9 @@ const LoginForm = () => {
       setUser({ ...response.user, ...filterGetMeResponse });
       setError('');
       setMessage(response.message);
-      // setTimeout(() => {
-      //   navigate({ to: '/messages' });
-      // }, 1500);
+      setTimeout(() => {
+        navigate({ to: '/chats' });
+      }, 1500);
       console.log(response.data);
     } catch (error) {
       setIsLoading(false);

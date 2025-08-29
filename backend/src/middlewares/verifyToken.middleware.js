@@ -26,6 +26,7 @@ export const verifyToken = async (req, res, next) => {
 
     next();
   } catch (error) {
+    console.log(error);
     return res
       .status(403)
       .json(new ApiError(403, 'Forbidden: Invalid token', [], error.stack));
